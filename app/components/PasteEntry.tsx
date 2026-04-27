@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 type EntryTab = "paste" | "ai";
 
@@ -10,6 +10,8 @@ interface PasteEntryProps {
   aiLoading?: boolean;
 }
 
+const URL_RE = /^https?:\/\/\S+$/;
+
 export default function PasteEntry({
   onGenerate,
   onAIGenerate,
@@ -18,9 +20,39 @@ export default function PasteEntry({
   const [tab, setTab] = useState<EntryTab>("paste");
   const [text, setText] = useState("");
   const [author, setAuthor] = useState("");
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [fetchedUrl, setFetchedUrl] = useState("");
 
   const canGenerate = text.trim().length > 0;
   const canAI = text.trim().length >= 20;
+
+  const isUrl = URL_RE.test(text.trim());
+
+  const handleFetchUrl = useCallback(async () => {
+    const url = text.trim();
+    setUrlLoading(true);
+    try {
+      const res = await fetch("/api/fetch-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.text) {
+        setText(`[抓取失败] ${data.error || "无法获取内容"}`);
+        return;
+      }
+      setText(data.text);
+      setFetchedUrl(url);
+      if (data.title && !author) {
+        setAuthor(data.title);
+      }
+    } catch {
+      setText("[抓取失败] 网络错误，请重试");
+    } finally {
+      setUrlLoading(false);
+    }
+  }, [text, author]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 min-h-screen relative overflow-hidden bg-black">
@@ -85,7 +117,7 @@ export default function PasteEntry({
               长文一键拆成金句卡
             </h1>
             <p className="text-white/60 mb-8">
-              粘贴长篇文章、播客文稿或会议记录，AI 自动提取金句并生成小红书套图。
+              粘贴长文、网页链接、播客文稿或会议记录，AI 自动提取金句并生成小红书套图。
             </p>
           </>
         )}
@@ -98,7 +130,7 @@ export default function PasteEntry({
             placeholder={
               tab === "paste"
                 ? "把你的文案粘贴在这里...\n\n可以是一段话、一篇文章、几句金句，\n长文会自动拆分成多张卡片。"
-                : "粘贴长篇文章、播客文稿或会议记录...\n\nAI 会自动提取 3-5 个最有传播价值的金句，\n生成可以直接发小红书的套图。"
+                : "粘贴长篇文章、网页链接、播客文稿或会议记录...\n\n支持直接粘贴网页链接（如 https://...），\nAI 会自动提取 3-5 个最有传播价值的金句。"
             }
             className={`w-full p-5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-gray-300/50 focus:border-gray-300 placeholder:leading-relaxed transition-all shadow-sm rounded-2xl ${
               tab === "paste"
@@ -135,6 +167,25 @@ export default function PasteEntry({
           />
         </div>
 
+        {/* URL detected banner */}
+        {tab === "ai" && isUrl && !fetchedUrl && (
+          <div className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-indigo-500/20 backdrop-blur-sm border border-indigo-400/30 rounded-xl">
+            <span className="text-sm text-indigo-200">🔗 检测到链接，</span>
+            <button
+              onClick={handleFetchUrl}
+              disabled={urlLoading}
+              className="text-sm font-medium text-indigo-300 hover:text-white transition-colors underline underline-offset-2"
+            >
+              {urlLoading ? "正在抓取..." : "点击抓取网页内容"}
+            </button>
+          </div>
+        )}
+        {tab === "ai" && fetchedUrl && (
+          <div className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-xl">
+            <span className="text-xs text-green-300">✅ 已从链接抓取内容：{fetchedUrl.slice(0, 40)}…</span>
+          </div>
+        )}
+
         {/* Buttons */}
         {tab === "paste" ? (
           <button
@@ -150,15 +201,23 @@ export default function PasteEntry({
           </button>
         ) : (
           <button
-            onClick={() => onAIGenerate(text.trim(), author.trim() || "OKKAPIAN")}
-            disabled={!canAI || aiLoading}
+            onClick={isUrl && !fetchedUrl ? handleFetchUrl : () => onAIGenerate(text.trim(), author.trim() || "OKKAPIAN")}
+            disabled={(!canAI && !isUrl) || aiLoading || urlLoading}
             className={`mt-6 w-full py-4 rounded-2xl text-base font-semibold transition-all shadow-sm ${
-              canAI && !aiLoading
+              (canAI || isUrl) && !aiLoading && !urlLoading
                 ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 hover:shadow-md active:scale-[0.99]"
                 : "bg-gray-700 text-gray-400 cursor-not-allowed"
             }`}
           >
-            {aiLoading ? (
+            {urlLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                正在抓取网页...
+              </span>
+            ) : aiLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -166,6 +225,8 @@ export default function PasteEntry({
                 </svg>
                 AI 正在分析...
               </span>
+            ) : isUrl && !fetchedUrl ? (
+              "🔗 抓取网页内容"
             ) : (
               "✨ 一键生成小红书套图"
             )}
