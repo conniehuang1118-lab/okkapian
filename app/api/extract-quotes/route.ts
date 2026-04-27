@@ -74,8 +74,12 @@ export async function POST(request: Request) {
   const prompt = `${SYSTEM_PROMPT}\n\n---\n\n以下是用户提供的原始内容：${urlContext}\n\n${text.slice(0, 8000)}`;
   const ai = new GoogleGenAI({ apiKey });
 
-  try {
-    const raw = await callWithRetry(ai, "gemini-2.5-flash", prompt, 4);
+  const models = ["gemini-3-flash", "gemini-2.5-flash"];
+  let lastError = "";
+
+  for (const model of models) {
+    try {
+      const raw = await callWithRetry(ai, model, prompt, 2);
 
     const jsonMatch = raw.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
@@ -93,9 +97,12 @@ export async function POST(request: Request) {
       );
     }
 
-    return Response.json({ quotes });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return Response.json({ error: msg }, { status: 500 });
+      return Response.json({ quotes, model });
+    } catch (err: unknown) {
+      lastError = err instanceof Error ? err.message : String(err);
+      continue;
+    }
   }
+
+  return Response.json({ error: lastError || "All models failed" }, { status: 503 });
 }
