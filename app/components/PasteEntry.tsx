@@ -135,11 +135,11 @@ export default function PasteEntry({
             className={`w-full p-5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-gray-300/50 focus:border-gray-300 placeholder:leading-relaxed transition-all shadow-sm rounded-2xl ${
               tab === "paste"
                 ? "h-56 sm:h-64 text-gray-800 bg-white/85 backdrop-blur-sm border border-gray-200/60 placeholder:text-gray-400"
-                : "h-64 sm:h-80 text-white bg-white/10 backdrop-blur-md border border-white/20 placeholder:text-white/40"
+                : "h-64 sm:h-80 text-gray-800 bg-white/90 backdrop-blur-sm border border-gray-200/60 placeholder:text-gray-400"
             }`}
           />
           {text.length > 0 && (
-            <div className={`absolute bottom-3 right-4 text-xs ${tab === "ai" ? "text-white/50" : "text-gray-400"}`}>
+            <div className="absolute bottom-3 right-4 text-xs text-gray-400">
               {text.length} 字
               {tab === "paste" && text.length > 120 && (
                 <span className="ml-1">
@@ -162,7 +162,7 @@ export default function PasteEntry({
             className={`w-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300/50 focus:border-gray-300 transition-all shadow-sm rounded-xl ${
               tab === "paste"
                 ? "text-gray-700 bg-white/85 backdrop-blur-sm border border-gray-200/60 placeholder:text-gray-400"
-                : "text-white bg-white/10 backdrop-blur-md border border-white/20 placeholder:text-white/40"
+                : "text-gray-700 bg-white/90 backdrop-blur-sm border border-gray-200/60 placeholder:text-gray-400"
             }`}
           />
         </div>
