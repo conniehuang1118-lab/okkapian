@@ -37,33 +37,44 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `${SYSTEM_PROMPT}\n\n---\n\n以下是用户的长文：\n\n${text.slice(0, 8000)}`,
-    });
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  const prompt = `${SYSTEM_PROMPT}\n\n---\n\n以下是用户的长文：\n\n${text.slice(0, 8000)}`;
+  const ai = new GoogleGenAI({ apiKey });
 
-    const raw = response.text ?? "";
-    const jsonMatch = raw.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      return Response.json(
-        { error: "AI did not return valid JSON", raw },
-        { status: 502 }
-      );
+  for (const model of models) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+      });
+
+      const raw = response.text ?? "";
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        return Response.json(
+          { error: "AI did not return valid JSON", raw },
+          { status: 502 }
+        );
+      }
+
+      const quotes: { content: string }[] = JSON.parse(jsonMatch[0]);
+      if (!Array.isArray(quotes) || quotes.length === 0) {
+        return Response.json(
+          { error: "AI returned empty array", raw },
+          { status: 502 }
+        );
+      }
+
+      return Response.json({ quotes, model });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isOverload = msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("overloaded");
+      if (isOverload && model !== models[models.length - 1]) {
+        continue;
+      }
+      return Response.json({ error: msg }, { status: 500 });
     }
-
-    const quotes: { content: string }[] = JSON.parse(jsonMatch[0]);
-    if (!Array.isArray(quotes) || quotes.length === 0) {
-      return Response.json(
-        { error: "AI returned empty array", raw },
-        { status: 502 }
-      );
-    }
-
-    return Response.json({ quotes });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return Response.json({ error: message }, { status: 500 });
   }
+
+  return Response.json({ error: "All models unavailable" }, { status: 503 });
 }
