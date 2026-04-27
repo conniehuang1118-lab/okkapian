@@ -39,7 +39,6 @@ export default function Home() {
   const [ratio, setRatio] = useState<AspectRatio>("3:4");
   const [aboutOpen, setAboutOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
 
   const visibleCardRef = useRef<(HTMLDivElement | null)[]>([]);
   const exportCardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -59,60 +58,6 @@ export default function Home() {
       setCurrentPage(0);
       setAuthor(authorName);
       setMode("edit");
-    },
-    []
-  );
-
-  const handleAIGenerate = useCallback(
-    async (text: string, authorName: string, sourceUrl?: string, images?: string[]) => {
-      setAiLoading(true);
-      try {
-        const res = await fetch("/api/extract-quotes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, url: sourceUrl }),
-        });
-        const data = await res.json();
-
-        if (!res.ok || !data.quotes) {
-          showToast(data.error || "AI 提取失败，请重试", "error");
-          return;
-        }
-
-        const quotes: { content: string }[] = data.quotes;
-        const aiPages: CardPage[] = quotes.map((q, i) => ({
-          text: q.content,
-          isCover: i === 0,
-          pageIndex: i,
-          bgImage: images?.[i] || undefined,
-        }));
-
-        const firstQuote = quotes[0]?.content || text;
-        const style = autoStyle(firstQuote);
-
-        if (images && images.length > 0) {
-          const illustTheme = themes.find((t) => t.group === "illustration") || style.theme;
-          setTheme(illustTheme);
-        } else {
-          setTheme(style.theme);
-        }
-        setFont(style.font);
-        setAlign("center");
-        setPadding(64);
-        setShowQuotes(false);
-
-        setRawText(text);
-        setPages(aiPages);
-        setCurrentPage(0);
-        setAuthor(authorName);
-        setMode("edit");
-
-        showToast(`AI 生成了 ${quotes.length} 张小红书卡片` + (images?.length ? `，配了 ${Math.min(images.length, quotes.length)} 张图` : ""));
-      } catch {
-        showToast("网络错误，请重试", "error");
-      } finally {
-        setAiLoading(false);
-      }
     },
     []
   );
@@ -264,7 +209,7 @@ export default function Home() {
   if (mode === "paste") {
     return (
       <>
-        <PasteEntry onGenerate={handleGenerate} onAIGenerate={handleAIGenerate} aiLoading={aiLoading} />
+        <PasteEntry onGenerate={handleGenerate} />
         <ToastContainer />
       </>
     );
