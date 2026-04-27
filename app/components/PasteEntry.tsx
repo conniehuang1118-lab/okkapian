@@ -6,7 +6,7 @@ type EntryTab = "paste" | "ai";
 
 interface PasteEntryProps {
   onGenerate: (text: string, author: string) => void;
-  onAIGenerate: (text: string, author: string) => void;
+  onAIGenerate: (text: string, author: string, sourceUrl?: string) => void;
   aiLoading?: boolean;
 }
 
@@ -201,7 +201,7 @@ export default function PasteEntry({
           </button>
         ) : (
           <button
-            onClick={isUrl && !fetchedUrl ? handleFetchUrl : () => onAIGenerate(text.trim(), author.trim() || "OKKAPIAN")}
+            onClick={isUrl && !fetchedUrl ? handleFetchUrl : () => onAIGenerate(text.trim(), author.trim() || "OKKAPIAN", fetchedUrl || undefined)}
             disabled={(!canAI && !isUrl) || aiLoading || urlLoading}
             className={`mt-6 w-full py-4 rounded-2xl text-base font-semibold transition-all shadow-sm ${
               (canAI || isUrl) && !aiLoading && !urlLoading

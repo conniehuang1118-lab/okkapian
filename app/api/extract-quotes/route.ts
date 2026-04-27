@@ -1,22 +1,27 @@
 import { GoogleGenAI } from "@google/genai";
 
-const SYSTEM_PROMPT = `你是一个资深的小红书内容创作者和运营专家。
+const SYSTEM_PROMPT = `你是一个资深的小红书博主，擅长写种草推荐和干货分享帖。
 
-用户会给你一段内容（可能是网页文章、播客文稿、会议记录、读书笔记、产品介绍等）。
-请基于这段内容，帮用户生成 3 到 5 张适合发小红书的卡片文案。
+用户会给你一段内容（通常是从某个网站/工具/产品页面抓取的文本）。
+请基于这段内容，帮用户生成一组小红书套图卡片文案（4-6 张）。
 
-要求：
-- 第一张作为封面/标题卡，内容是一个吸引眼球的标题（15-25字），要有小红书爆款标题的风格（可以用 emoji、反问、数字、悬念等手法）
-- 后面每张卡片是一个独立的知识点/观点/干货，字数控制在 30-60 字
-- 不要照搬原文，要用小红书的口吻重新改写（口语化、有态度、有共鸣感）
-- 内容要有逻辑递进，像一组连贯的小红书套图
-- 必须严格按照以下 JSON 数组格式返回，不要包含任何其他文字：
+**每张卡片的定位：**
+1. 封面卡：一句吸引眼球的标题（15-30字），小红书爆款风格，可用 emoji、反问、数字
+2. 介绍卡："这是什么"——用一句话说清这个工具/内容是干什么的，解决什么问题
+3. 亮点卡："为什么推荐"——3-5 个核心亮点，每个亮点一句话，用 emoji 列表
+4. 使用体验/教程卡：简单说怎么用、上手体验如何
+5. 价格/免费信息卡（如果能判断出来的话）：免费还是付费、有没有替代品
+6. 总结卡：一句话总结推荐理由 + 网站地址（如果原文中有的话）
 
-[{ "content": "卡片文案内容" }, ...]
+**文案风格要求：**
+- 小红书口吻：口语化、真诚、像朋友推荐给朋友
+- 每张卡片 30-80 字，不要太长
+- 善用 emoji 增加可读性（但不要过度）
+- 如果是工具推荐，突出"好用""免费""效率""宝藏"这类种草词
+- 不要用"本文""该产品"这种书面语
 
-示例风格参考：
-- 封面："打工人必看！这 5 个认知升级让我少走 3 年弯路 🚀"
-- 内容卡："别把「我觉得」当成「用户需要」。真正的产品思维，是先找到痛点，再用最简单的方式解决它。"`;
+**必须严格按照以下 JSON 数组格式返回，不要包含任何其他文字：**
+[{ "content": "卡片文案内容" }, ...]`;
 
 export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -27,14 +32,14 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { text: string };
+  let body: { text: string; url?: string };
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { text } = body;
+  const { text, url } = body;
   if (!text || text.trim().length < 20) {
     return Response.json(
       { error: "Text too short — need at least 20 characters" },
@@ -42,8 +47,9 @@ export async function POST(request: Request) {
     );
   }
 
+  const urlContext = url ? `\n\n原始网址：${url}` : "";
   const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
-  const prompt = `${SYSTEM_PROMPT}\n\n---\n\n以下是用户提供的原始内容：\n\n${text.slice(0, 8000)}`;
+  const prompt = `${SYSTEM_PROMPT}\n\n---\n\n以下是用户提供的原始内容：${urlContext}\n\n${text.slice(0, 8000)}`;
   const ai = new GoogleGenAI({ apiKey });
 
   for (const model of models) {

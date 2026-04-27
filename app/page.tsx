@@ -64,13 +64,13 @@ export default function Home() {
   );
 
   const handleAIGenerate = useCallback(
-    async (text: string, authorName: string) => {
+    async (text: string, authorName: string, sourceUrl?: string) => {
       setAiLoading(true);
       try {
         const res = await fetch("/api/extract-quotes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, url: sourceUrl }),
         });
         const data = await res.json();
 
