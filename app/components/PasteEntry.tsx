@@ -114,10 +114,10 @@ export default function PasteEntry({
         ) : (
           <>
             <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-2">
-              长文一键拆成金句卡
+              一键生成小红书推文
             </h1>
             <p className="text-white/60 mb-8">
-              粘贴长文、网页链接、播客文稿或会议记录，AI 自动提取金句并生成小红书套图。
+              粘贴文章、网页链接或任何内容，AI 自动改写成小红书风格套图，直接能发。
             </p>
           </>
         )}
@@ -130,7 +130,7 @@ export default function PasteEntry({
             placeholder={
               tab === "paste"
                 ? "把你的文案粘贴在这里...\n\n可以是一段话、一篇文章、几句金句，\n长文会自动拆分成多张卡片。"
-                : "粘贴长篇文章、网页链接、播客文稿或会议记录...\n\n支持直接粘贴网页链接（如 https://...），\nAI 会自动提取 3-5 个最有传播价值的金句。"
+                : "粘贴文章内容或网页链接...\n\n支持直接粘贴网页链接（如 https://...），\nAI 会帮你改写成 3-5 张小红书风格的套图文案。"
             }
             className={`w-full p-5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-gray-300/50 focus:border-gray-300 placeholder:leading-relaxed transition-all shadow-sm rounded-2xl ${
               tab === "paste"

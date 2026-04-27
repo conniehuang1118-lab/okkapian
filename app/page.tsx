@@ -100,7 +100,7 @@ export default function Home() {
         setAuthor(authorName);
         setMode("edit");
 
-        showToast(`AI 提取了 ${quotes.length} 条金句`);
+        showToast(`AI 生成了 ${quotes.length} 张小红书卡片`);
       } catch {
         showToast("网络错误，请重试", "error");
       } finally {
