@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter } from "next/font/google";
 import "./globals.css";
+
+const GA_ID = "G-GK7CHQ5607";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -36,7 +39,16 @@ export default function RootLayout({
         />
         <link href={googleFontsUrl} rel="stylesheet" crossOrigin="anonymous" />
       </head>
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+      <body className="min-h-full flex flex-col antialiased">
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}');`}
+        </Script>
+        {children}
+      </body>
     </html>
   );
 }

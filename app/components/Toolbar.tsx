@@ -92,6 +92,113 @@ function DropdownSelect({
   );
 }
 
+const themeGroups = [
+  { key: "solid" as const, label: "经典" },
+  { key: "gradient" as const, label: "渐变" },
+  { key: "illustration" as const, label: "插画" },
+];
+
+function ThemeTabs({
+  theme,
+  onThemeChange,
+}: {
+  theme: Theme;
+  onThemeChange: (t: Theme) => void;
+}) {
+  const currentGroup = theme.group;
+  const [activeTab, setActiveTab] = useState<"solid" | "gradient" | "illustration">(currentGroup);
+
+  const filtered = themes.filter((t) => t.group === activeTab);
+
+  return (
+    <div className="px-2 pt-1.5 pb-1 w-[280px]">
+      {/* Tabs */}
+      <div className="flex bg-gray-100 rounded-lg p-0.5 mb-2">
+        {themeGroups.map((g) => (
+          <button
+            key={g.key}
+            onClick={() => setActiveTab(g.key)}
+            className={`flex-1 text-xs py-1.5 rounded-md transition-colors font-medium ${
+              activeTab === g.key
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      {activeTab === "solid" && (
+        <div>
+          {filtered.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => onThemeChange(t)}
+              className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm transition-colors ${
+                theme.id === t.id
+                  ? "bg-gray-100 text-gray-900 font-medium"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <div
+                className="w-5 h-5 rounded-full border border-gray-200 shrink-0"
+                style={{ background: t.preview }}
+              />
+              {t.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeTab === "gradient" && (
+        <div className="grid grid-cols-2 gap-1">
+          {filtered.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => onThemeChange(t)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-colors ${
+                theme.id === t.id
+                  ? "bg-gray-100 text-gray-900 font-medium"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              <div
+                className="w-8 h-8 rounded-lg border border-gray-200/60 shrink-0"
+                style={{ background: t.preview }}
+              />
+              {t.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeTab === "illustration" && (
+        <div className="grid grid-cols-3 gap-1">
+          {filtered.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => onThemeChange(t)}
+              className={`flex flex-col items-center gap-1 p-1.5 rounded-lg text-[10px] transition-colors ${
+                theme.id === t.id
+                  ? "ring-2 ring-gray-800 bg-gray-50 text-gray-900 font-medium"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              <div
+                className="w-full aspect-[3/4] rounded-md border border-gray-200/60 shrink-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${t.preview})` }}
+              />
+              {t.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StarIcon({ filled }: { filled: boolean }) {
   return (
     <svg
@@ -139,57 +246,15 @@ export default function Toolbar({
             trigger={
               <div
                 className="w-5 h-5 rounded-full border border-gray-200"
-                style={{ background: theme.preview }}
+                style={
+                  theme.group === "illustration"
+                    ? { backgroundImage: `url(${theme.preview})`, backgroundSize: "cover", backgroundPosition: "center" }
+                    : { background: theme.preview }
+                }
               />
             }
           >
-            <div className="px-2 pt-1.5 pb-1">
-              <div className="text-[10px] uppercase tracking-wider text-gray-400 px-2 py-1">经典</div>
-              {themes.filter((t) => t.group === "solid").map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    onThemeChange(t);
-                    setOpenPanel(null);
-                  }}
-                  className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm transition-colors ${
-                    theme.id === t.id
-                      ? "bg-gray-100 text-gray-900 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <div
-                    className="w-5 h-5 rounded-full border border-gray-200 shrink-0"
-                    style={{ background: t.preview }}
-                  />
-                  {t.name}
-                </button>
-              ))}
-              <div className="h-px bg-gray-100 my-1" />
-              <div className="text-[10px] uppercase tracking-wider text-gray-400 px-2 py-1">渐变</div>
-              <div className="grid grid-cols-2 gap-1">
-                {themes.filter((t) => t.group === "gradient").map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      onThemeChange(t);
-                      setOpenPanel(null);
-                    }}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-colors ${
-                      theme.id === t.id
-                        ? "bg-gray-100 text-gray-900 font-medium"
-                        : "text-gray-500 hover:bg-gray-50"
-                    }`}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-lg border border-gray-200/60 shrink-0"
-                      style={{ background: t.preview }}
-                    />
-                    {t.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <ThemeTabs theme={theme} onThemeChange={(t) => { onThemeChange(t); setOpenPanel(null); }} />
           </DropdownSelect>
         </div>
 

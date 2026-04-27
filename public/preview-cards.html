@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>中文卡片样板 · 插画底图 + 文字叠加</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: #111;
+        min-height: 100vh;
+        padding: 60px 40px;
+        font-family: "Noto Sans SC", sans-serif;
+        color: #eee;
+      }
+      .page-title {
+        max-width: 1400px;
+        margin: 0 auto 48px;
+      }
+      .page-title h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+      .page-title p { font-size: 14px; opacity: 0.5; }
+
+      .grid {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 28px;
+      }
+
+      .card-wrap .label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.35);
+        margin-bottom: 8px;
+      }
+
+      .card {
+        aspect-ratio: 9 / 16;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+        display: flex;
+        flex-direction: column;
+        padding: 32px 26px;
+      }
+
+      .card .headline {
+        font-family: "Noto Serif SC", serif;
+        font-weight: 900;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+      }
+      .card .body {
+        font-family: "Noto Sans SC", sans-serif;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 1.7;
+      }
+      .card .author {
+        font-family: "Noto Sans SC", sans-serif;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+      }
+
+      /* ── Text positioning helpers ── */
+      .text-top { justify-content: flex-start; }
+      .text-center { justify-content: center; }
+      .text-bottom { justify-content: flex-end; }
+
+      /* ── Light text (for dark images) ── */
+      .light .headline { color: #fff; }
+      .light .body { color: rgba(255,255,255,0.9); }
+      .light .author { color: rgba(255,255,255,0.5); }
+
+      /* ── Dark text (for light images) ── */
+      .dark .headline { color: #111; }
+      .dark .body { color: #333; }
+      .dark .author { color: rgba(0,0,0,0.4); }
+
+      /* ── Scrim overlays ── */
+      .scrim-top::before,
+      .scrim-bottom::after {
+        content: "";
+        position: absolute;
+        left: 0; right: 0;
+        height: 50%;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .scrim-top::before {
+        top: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
+      }
+      .scrim-bottom::after {
+        bottom: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
+      }
+      .scrim-top-light::before {
+        top: 0;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, transparent 100%);
+      }
+      .scrim-bottom-light::after {
+        bottom: 0;
+        background: linear-gradient(to top, rgba(255,255,255,0.65) 0%, transparent 100%);
+      }
+
+      .card > * { position: relative; z-index: 1; }
+
+      .headline.size-l { font-size: 28px; }
+      .headline.size-m { font-size: 24px; }
+      .headline.size-s { font-size: 20px; }
+      .body { margin-top: 12px; }
+      .author { margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="page-title">
+      <h1>插画底图 + 文字叠加</h1>
+      <p>12 张卡片 · 思源宋体标题 + 思源黑体正文 · 全部图做满屏背景</p>
+    </div>
+
+    <div class="grid">
+
+      <!-- 1. Fish — white bg → dark text top -->
+      <div class="card-wrap">
+        <div class="label">金鱼</div>
+        <div class="card text-top dark scrim-top-light" style="background-image: url('/samples/fish.png')">
+          <div class="headline size-l">我们其实都清楚——<br/>那不是真相。</div>
+          <div class="body">可金鱼只有七秒记忆，而这个刻板印象却一直没变过。</div>
+        </div>
+      </div>
+
+      <!-- 2. Coin — dark → Manychat style: body middle + big headline bottom -->
+      <div class="card-wrap">
+        <div class="label">硬币</div>
+        <div class="card light" style="background-image: url('/samples/coin.png'); justify-content: space-between; padding: 32px 26px;">
+          <div></div>
+          <div class="body" style="text-align: center; font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.9); max-width: 85%; margin: 0 auto;">
+            算法给你一枚硬币，<br/>然后让你觉得你赚了。<br/>可副业终究是副业，<br/>要么接受它的局限，<br/>要么把它当正事来做。
+          </div>
+          <div class="headline" style="font-size: 32px; text-align: center; color: #fff; font-weight: 900;">
+            怎么做？<br/>聊聊看。
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Dollar girl — full bleed, big headline bottom + subtitle -->
+      <div class="card-wrap">
+        <div class="label">金发女孩</div>
+        <div class="card light scrim-bottom" style="background-image: url('/samples/dollar-girl.png'); justify-content: flex-end; padding: 0 26px 32px;">
+          <div class="headline" style="font-size: 34px; font-weight: 900; color: #fff;">
+            创作者<br/>怎么赚钱？
+          </div>
+          <div style="font-family: 'Noto Sans SC', sans-serif; font-size: 14px; color: rgba(255,255,255,0.75); margin-top: 8px; font-style: italic;">
+            来拆解一下。
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Standing — teal → light text center-left -->
+      <div class="card-wrap">
+        <div class="label">金币堆</div>
+        <div class="card text-center light" style="background-image: url('/samples/standing.png')">
+          <div class="headline size-l">站得越高，<br/>脚下越不稳。</div>
+          <div class="body">粉丝数是台阶，<br/>但没人告诉你台阶会晃。</div>
+        </div>
+      </div>
+
+      <!-- 5. Frog — white bg → light text top -->
+      <div class="card-wrap">
+        <div class="label">青蛙</div>
+        <div class="card text-top light" style="background-image: url('/samples/frog.png')">
+          <div class="headline size-l">慢一点也没关系。</div>
+          <div class="body">不是每一步都需要被看见，<br/>有些路只适合自己走。</div>
+        </div>
+      </div>
+
+      <!-- 6. Brush — blue → light text center -->
+      <div class="card-wrap">
+        <div class="label">蓝色笔触</div>
+        <div class="card text-center light" style="background-image: url('/samples/brush.png')">
+          <div class="headline size-l">写下的那一刻，<br/>才真正属于你。</div>
+          <div class="body">不是点赞，不是转发，<br/>是你落笔时那一下的确定。</div>
+        </div>
+      </div>
+
+      <!-- 7. Reading — orange → light text top -->
+      <div class="card-wrap">
+        <div class="label">读书女孩</div>
+        <div class="card text-top light scrim-top" style="background-image: url('/samples/reading.png')">
+          <div class="headline size-m">她从不刷推荐，<br/>只看自己想看的。</div>
+          <div class="body">这是 2026 年最奢侈的自由。</div>
+        </div>
+      </div>
+
+      <!-- 8. Birds — dark → light text bottom -->
+      <div class="card-wrap">
+        <div class="label">飞鸟</div>
+        <div class="card text-bottom light scrim-bottom" style="background-image: url('/samples/birds.png')">
+          <div class="headline size-l">飞的方向<br/>不需要和别人一样。</div>
+          <div class="body">算法推给你的路径不是你的路径，<br/>你的翅膀知道该往哪去。</div>
+        </div>
+      </div>
+
+      <!-- 9. Sleeping — beige → dark text top -->
+      <div class="card-wrap">
+        <div class="label">午睡</div>
+        <div class="card text-top dark" style="background-image: url('/samples/sleeping.png')">
+          <div class="headline size-l">今天什么都不想做，<br/>也很好。</div>
+          <div class="body">灵感不是逼出来的，<br/>有时候它藏在一个下午的发呆里。</div>
+        </div>
+      </div>
+
+      <!-- 10. Landscape — purple → light text top -->
+      <div class="card-wrap">
+        <div class="label">月下田野</div>
+        <div class="card text-top light" style="background-image: url('/samples/landscape.png')">
+          <div class="headline size-l">路很长，<br/>但月亮一直都在。</div>
+          <div class="body">别急着赶路，<br/>风景只在慢下来的时候才看得见。</div>
+        </div>
+      </div>
+
+      <!-- 11. Knot — olive → dark text bottom-left -->
+      <div class="card-wrap">
+        <div class="label">绳结</div>
+        <div class="card text-bottom dark" style="background-image: url('/samples/knot.png')">
+          <div class="headline size-l">有些关系，<br/>越解越紧。</div>
+          <div class="body">不如先放手，结自己会松。</div>
+        </div>
+      </div>
+
+      <!-- 12. Phone in jungle → light text bottom -->
+      <div class="card-wrap">
+        <div class="label">丛林手机</div>
+        <div class="card text-bottom light scrim-bottom" style="background-image: url('/samples/phone-jungle.png')">
+          <div class="headline size-m">我们用屏幕<br/>隔开了整个世界。</div>
+          <div class="body">然后又用屏幕假装自己还在里面。</div>
+        </div>
+      </div>
+
+    </div>
+  </body>
+</html>

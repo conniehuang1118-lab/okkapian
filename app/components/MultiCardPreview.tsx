@@ -26,6 +26,8 @@ interface MultiCardPreviewProps {
   onPageChange: (index: number) => void;
   onTextChange: (pageIndex: number, text: string) => void;
   cardRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+  onMerge?: () => void;
+  onResplit?: () => void;
 }
 
 export default function MultiCardPreview({
@@ -41,6 +43,8 @@ export default function MultiCardPreview({
   onPageChange,
   onTextChange,
   cardRefs,
+  onMerge,
+  onResplit,
 }: MultiCardPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -112,6 +116,10 @@ export default function MultiCardPreview({
         className={`relative w-full max-w-[480px] ${ratioStyles[ratio].className} rounded-2xl shadow-lg flex flex-col justify-center overflow-hidden`}
         style={{
           background: theme.cardBg,
+          backgroundImage: theme.cardBgImage ? `url(${theme.cardBgImage})` : undefined,
+          backgroundSize: theme.cardBgImage ? "100% auto" : undefined,
+          backgroundPosition: theme.cardBgImage ? "center" : undefined,
+          backgroundRepeat: theme.cardBgImage ? "no-repeat" : undefined,
           padding: `${padding}px`,
         }}
       >
@@ -170,22 +178,48 @@ export default function MultiCardPreview({
         )}
       </div>
 
-      {/* Dots pagination */}
-      {pages.length > 1 && (
-        <div className="flex items-center gap-1.5 mt-4">
-          {pages.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => onPageChange(i)}
-              className={`rounded-full transition-all ${
-                i === currentPage
-                  ? "w-6 h-2 bg-gray-600"
-                  : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
-              }`}
-            />
-          ))}
-        </div>
-      )}
+      {/* Dots pagination + merge/split */}
+      <div className="flex items-center gap-3 mt-4">
+        {pages.length > 1 && (
+          <div className="flex items-center gap-1.5">
+            {pages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => onPageChange(i)}
+                className={`rounded-full transition-all ${
+                  i === currentPage
+                    ? "w-6 h-2 bg-gray-600"
+                    : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {onMerge && (
+          <button
+            onClick={onMerge}
+            className="flex items-center gap-1 px-3 py-1 text-xs text-gray-500 bg-white/80 rounded-full border border-gray-200/60 hover:bg-white hover:text-gray-700 hover:border-gray-300 transition-colors shadow-sm"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M4 6l4 4 4-4" />
+            </svg>
+            合并为一张
+          </button>
+        )}
+
+        {onResplit && (
+          <button
+            onClick={onResplit}
+            className="flex items-center gap-1 px-3 py-1 text-xs text-gray-500 bg-white/80 rounded-full border border-gray-200/60 hover:bg-white hover:text-gray-700 hover:border-gray-300 transition-colors shadow-sm"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M4 10l4-4 4 4" />
+            </svg>
+            重新拆分
+          </button>
+        )}
+      </div>
     </div>
   );
 }

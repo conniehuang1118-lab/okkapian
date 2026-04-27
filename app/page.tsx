@@ -39,6 +39,7 @@ export default function Home() {
   const [ratio, setRatio] = useState<AspectRatio>("3:4");
   const [aboutOpen, setAboutOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const visibleCardRef = useRef<(HTMLDivElement | null)[]>([]);
   const exportCardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -52,11 +53,59 @@ export default function Home() {
       setPadding(style.padding);
       setShowQuotes(style.showQuotes);
 
+      setRawText(text);
       const split = splitText(text);
       setPages(split);
       setCurrentPage(0);
       setAuthor(authorName);
       setMode("edit");
+    },
+    []
+  );
+
+  const handleAIGenerate = useCallback(
+    async (text: string, authorName: string) => {
+      setAiLoading(true);
+      try {
+        const res = await fetch("/api/extract-quotes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.quotes) {
+          showToast(data.error || "AI 提取失败，请重试", "error");
+          return;
+        }
+
+        const quotes: { content: string }[] = data.quotes;
+        const aiPages: CardPage[] = quotes.map((q, i) => ({
+          text: q.content,
+          isCover: i === 0,
+          pageIndex: i,
+        }));
+
+        const firstQuote = quotes[0]?.content || text;
+        const style = autoStyle(firstQuote);
+        setTheme(style.theme);
+        setFont(style.font);
+        setAlign("center");
+        setPadding(64);
+        setShowQuotes(true);
+
+        setRawText(text);
+        setPages(aiPages);
+        setCurrentPage(0);
+        setAuthor(authorName);
+        setMode("edit");
+
+        showToast(`AI 提取了 ${quotes.length} 条金句`);
+      } catch {
+        showToast("网络错误，请重试", "error");
+      } finally {
+        setAiLoading(false);
+      }
     },
     []
   );
@@ -70,9 +119,24 @@ export default function Home() {
     []
   );
 
+  const [rawText, setRawText] = useState("");
+
   const handleBack = useCallback(() => {
     setMode("paste");
   }, []);
+
+  const handleMergePages = useCallback(() => {
+    const merged = pages.map((p) => p.text).join("\n\n");
+    setPages([{ text: merged, isCover: true, pageIndex: 0 }]);
+    setCurrentPage(0);
+  }, [pages]);
+
+  const handleResplit = useCallback(() => {
+    if (!rawText) return;
+    const split = splitText(rawText);
+    setPages(split);
+    setCurrentPage(0);
+  }, [rawText]);
 
   // ── Export helpers ──
 
@@ -193,7 +257,7 @@ export default function Home() {
   if (mode === "paste") {
     return (
       <>
-        <PasteEntry onGenerate={handleGenerate} />
+        <PasteEntry onGenerate={handleGenerate} onAIGenerate={handleAIGenerate} aiLoading={aiLoading} />
         <ToastContainer />
       </>
     );
@@ -225,6 +289,8 @@ export default function Home() {
         onPageChange={setCurrentPage}
         onTextChange={handleTextChange}
         cardRefs={visibleCardRef}
+        onMerge={pages.length > 1 ? handleMergePages : undefined}
+        onResplit={pages.length === 1 && rawText.length > 200 ? handleResplit : undefined}
       />
       <Toolbar
         theme={theme}

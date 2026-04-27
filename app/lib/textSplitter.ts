@@ -4,8 +4,8 @@ export interface CardPage {
   pageIndex: number;
 }
 
-const MAX_CHARS_PER_CARD = 120;
-const IDEAL_CHARS_PER_CARD = 80;
+const MAX_CHARS_PER_CARD = 200;
+const IDEAL_CHARS_PER_CARD = 160;
 
 export function splitText(raw: string): CardPage[] {
   const trimmed = raw.trim();

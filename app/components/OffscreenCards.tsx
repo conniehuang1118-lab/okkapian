@@ -69,6 +69,10 @@ export default function OffscreenCards({
             className={`w-[480px] ${ratioStyles[ratio]} rounded-2xl shadow-lg flex flex-col justify-center overflow-hidden mb-4`}
             style={{
               background: theme.cardBg,
+              backgroundImage: theme.cardBgImage ? `url(${theme.cardBgImage})` : undefined,
+              backgroundSize: theme.cardBgImage ? "100% auto" : undefined,
+              backgroundPosition: theme.cardBgImage ? "center" : undefined,
+              backgroundRepeat: theme.cardBgImage ? "no-repeat" : undefined,
               padding: `${padding}px`,
             }}
           >

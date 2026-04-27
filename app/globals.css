@@ -52,3 +52,21 @@ body {
     transform: translateY(0);
   }
 }
+
+@keyframes sway1 {
+  0%, 100% { transform: rotate(0deg) translateX(0); }
+  30% { transform: rotate(1.5deg) translateX(6px); }
+  70% { transform: rotate(-1deg) translateX(-4px); }
+}
+
+@keyframes sway2 {
+  0%, 100% { transform: rotate(0deg) translateX(0); }
+  40% { transform: rotate(-1.8deg) translateX(-8px); }
+  80% { transform: rotate(0.8deg) translateX(3px); }
+}
+
+@keyframes sway3 {
+  0%, 100% { transform: rotate(0deg) translateX(0) translateY(0); }
+  35% { transform: rotate(0.5deg) translateX(5px) translateY(2px); }
+  65% { transform: rotate(-0.8deg) translateX(-6px) translateY(-1px); }
+}
