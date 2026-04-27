@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 
 const SYSTEM_PROMPT = `你是一个资深的小红书博主，擅长写种草推荐和干货分享帖。
 
-用户会给你一段内容（通常是从某个网站/工具/产品页面抓取的文本）。
+用户会给你一段内容（可能是从某个网站/工具/产品页面抓取的文本）。
 请基于这段内容，帮用户生成一组小红书套图卡片文案（4-6 张）。
 
 **每张卡片的定位：**
@@ -22,6 +22,29 @@ const SYSTEM_PROMPT = `你是一个资深的小红书博主，擅长写种草推
 
 **必须严格按照以下 JSON 数组格式返回，不要包含任何其他文字：**
 [{ "content": "卡片文案内容" }, ...]`;
+
+async function callWithRetry(
+  ai: GoogleGenAI,
+  model: string,
+  prompt: string,
+  maxRetries = 3
+): Promise<string> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({ model, contents: prompt });
+      return response.text ?? "";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isRetryable = msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("overloaded");
+      if (isRetryable && attempt < maxRetries - 1) {
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
 
 export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -48,48 +71,31 @@ export async function POST(request: Request) {
   }
 
   const urlContext = url ? `\n\n原始网址：${url}` : "";
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash-lite"];
   const prompt = `${SYSTEM_PROMPT}\n\n---\n\n以下是用户提供的原始内容：${urlContext}\n\n${text.slice(0, 8000)}`;
   const ai = new GoogleGenAI({ apiKey });
 
-  for (const model of models) {
-    try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt,
-      });
+  try {
+    const raw = await callWithRetry(ai, "gemini-2.5-flash", prompt, 4);
 
-      const raw = response.text ?? "";
-      const jsonMatch = raw.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        return Response.json(
-          { error: "AI did not return valid JSON", raw },
-          { status: 502 }
-        );
-      }
-
-      const quotes: { content: string }[] = JSON.parse(jsonMatch[0]);
-      if (!Array.isArray(quotes) || quotes.length === 0) {
-        return Response.json(
-          { error: "AI returned empty array", raw },
-          { status: 502 }
-        );
-      }
-
-      return Response.json({ quotes, model });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      const isRetryable =
-        msg.includes("503") ||
-        msg.includes("UNAVAILABLE") ||
-        msg.includes("overloaded") ||
-        msg.includes("404");
-      if (isRetryable && model !== models[models.length - 1]) {
-        continue;
-      }
-      return Response.json({ error: msg }, { status: 500 });
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      return Response.json(
+        { error: "AI did not return valid JSON", raw },
+        { status: 502 }
+      );
     }
-  }
 
-  return Response.json({ error: "All models unavailable" }, { status: 503 });
+    const quotes: { content: string }[] = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(quotes) || quotes.length === 0) {
+      return Response.json(
+        { error: "AI returned empty array", raw },
+        { status: 502 }
+      );
+    }
+
+    return Response.json({ quotes });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return Response.json({ error: msg }, { status: 500 });
+  }
 }
