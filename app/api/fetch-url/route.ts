@@ -1,5 +1,13 @@
 import * as cheerio from "cheerio";
 
+function toAbsoluteUrl(src: string, base: string): string {
+  try {
+    return new URL(src, base).href;
+  } catch {
+    return "";
+  }
+}
+
 export async function POST(request: Request) {
   let body: { url: string };
   try {
@@ -41,22 +49,47 @@ export async function POST(request: Request) {
     const ogTitle =
       $('meta[property="og:title"]').attr("content")?.trim() || "";
 
-    // Remove non-content elements
+    // Extract images
+    const images: string[] = [];
+    const seen = new Set<string>();
+
+    const ogImage = $('meta[property="og:image"]').attr("content")?.trim();
+    if (ogImage) {
+      const abs = toAbsoluteUrl(ogImage, url);
+      if (abs) { images.push(abs); seen.add(abs); }
+    }
+
+    const twitterImage = $('meta[name="twitter:image"]').attr("content")?.trim();
+    if (twitterImage) {
+      const abs = toAbsoluteUrl(twitterImage, url);
+      if (abs && !seen.has(abs)) { images.push(abs); seen.add(abs); }
+    }
+
+    $("img").each((_, el) => {
+      if (images.length >= 8) return false;
+      const src = $(el).attr("src") || $(el).attr("data-src") || "";
+      if (!src) return;
+      const abs = toAbsoluteUrl(src, url);
+      if (!abs || seen.has(abs)) return;
+      // Skip tiny icons / tracking pixels / SVGs
+      if (abs.includes("icon") || abs.includes("logo") || abs.includes("avatar") ||
+          abs.endsWith(".svg") || abs.includes("1x1") || abs.includes("pixel")) return;
+      const width = parseInt($(el).attr("width") || "0");
+      const height = parseInt($(el).attr("height") || "0");
+      if ((width > 0 && width < 80) || (height > 0 && height < 80)) return;
+      images.push(abs);
+      seen.add(abs);
+    });
+
+    // Remove non-content elements for text extraction
     $(
       "script,style,nav,header,footer,aside,iframe,noscript,svg,form,button,select,input,label,.ad,.ads,.sidebar,.comment,.comments,.nav,.menu,.footer,.header,[aria-hidden=true]"
     ).remove();
 
     const selectors = [
-      "article",
-      '[role="main"]',
-      "main",
-      ".post-content",
-      ".article-content",
-      ".entry-content",
-      ".content",
-      "#content",
-      ".post",
-      ".article",
+      "article", '[role="main"]', "main",
+      ".post-content", ".article-content", ".entry-content",
+      ".content", "#content", ".post", ".article",
     ];
 
     let text = "";
@@ -78,7 +111,6 @@ export async function POST(request: Request) {
       .replace(/^\s+|\s+$/gm, "")
       .trim();
 
-    // Build a rich context even if body text is poor (SPA sites)
     const parts: string[] = [];
     if (title) parts.push(`网站标题：${title}`);
     if (ogTitle && ogTitle !== title) parts.push(`页面标题：${ogTitle}`);
@@ -98,7 +130,11 @@ export async function POST(request: Request) {
       );
     }
 
-    return Response.json({ text: finalText, title: title || ogTitle });
+    return Response.json({
+      text: finalText,
+      title: title || ogTitle,
+      images,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return Response.json({ error: message }, { status: 500 });

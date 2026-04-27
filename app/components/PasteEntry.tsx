@@ -6,7 +6,7 @@ type EntryTab = "paste" | "ai";
 
 interface PasteEntryProps {
   onGenerate: (text: string, author: string) => void;
-  onAIGenerate: (text: string, author: string, sourceUrl?: string) => void;
+  onAIGenerate: (text: string, author: string, sourceUrl?: string, images?: string[]) => void;
   aiLoading?: boolean;
 }
 
@@ -22,6 +22,7 @@ export default function PasteEntry({
   const [author, setAuthor] = useState("");
   const [urlLoading, setUrlLoading] = useState(false);
   const [fetchedUrl, setFetchedUrl] = useState("");
+  const [fetchedImages, setFetchedImages] = useState<string[]>([]);
 
   const canGenerate = text.trim().length > 0;
   const canAI = text.trim().length >= 20;
@@ -44,6 +45,7 @@ export default function PasteEntry({
       }
       setText(data.text);
       setFetchedUrl(url);
+      setFetchedImages(data.images || []);
       if (data.title && !author) {
         setAuthor(data.title);
       }
@@ -181,8 +183,24 @@ export default function PasteEntry({
           </div>
         )}
         {tab === "ai" && fetchedUrl && (
-          <div className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-xl">
+          <div className="mt-3 px-4 py-2.5 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-xl">
             <span className="text-xs text-green-300">✅ 已从链接抓取内容：{fetchedUrl.slice(0, 40)}…</span>
+            {fetchedImages.length > 0 && (
+              <div className="mt-2 flex gap-2 overflow-x-auto">
+                {fetchedImages.slice(0, 5).map((img, i) => (
+                  <img
+                    key={i}
+                    src={img}
+                    alt=""
+                    className="w-14 h-14 rounded-lg object-cover border border-white/20 flex-shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                ))}
+                <span className="text-xs text-green-300/60 self-center ml-1">
+                  {fetchedImages.length} 张图
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -201,7 +219,7 @@ export default function PasteEntry({
           </button>
         ) : (
           <button
-            onClick={isUrl && !fetchedUrl ? handleFetchUrl : () => onAIGenerate(text.trim(), author.trim() || "OKKAPIAN", fetchedUrl || undefined)}
+            onClick={isUrl && !fetchedUrl ? handleFetchUrl : () => onAIGenerate(text.trim(), author.trim() || "OKKAPIAN", fetchedUrl || undefined, fetchedImages.length > 0 ? fetchedImages : undefined)}
             disabled={(!canAI && !isUrl) || aiLoading || urlLoading}
             className={`mt-6 w-full py-4 rounded-2xl text-base font-semibold transition-all shadow-sm ${
               (canAI || isUrl) && !aiLoading && !urlLoading

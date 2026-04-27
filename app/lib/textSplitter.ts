@@ -2,6 +2,7 @@ export interface CardPage {
   text: string;
   isCover: boolean;
   pageIndex: number;
+  bgImage?: string;
 }
 
 const MAX_CHARS_PER_CARD = 200;

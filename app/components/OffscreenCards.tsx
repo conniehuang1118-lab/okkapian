@@ -62,60 +62,66 @@ export default function OffscreenCards({
               ? "text-xl"
               : "text-lg";
 
+        const hasBg = !!page.bgImage;
+
         return (
           <div
             key={i}
             ref={(el) => { cardRefs.current[i] = el; }}
-            className={`w-[480px] ${ratioStyles[ratio]} rounded-2xl shadow-lg flex flex-col justify-center overflow-hidden mb-4`}
+            className={`w-[480px] ${ratioStyles[ratio]} rounded-2xl shadow-lg flex flex-col justify-center overflow-hidden mb-4 relative`}
             style={{
               background: theme.cardBg,
-              backgroundImage: theme.cardBgImage ? `url(${theme.cardBgImage})` : undefined,
-              backgroundSize: theme.cardBgImage ? "100% auto" : undefined,
-              backgroundPosition: theme.cardBgImage ? "center" : undefined,
-              backgroundRepeat: theme.cardBgImage ? "no-repeat" : undefined,
+              backgroundImage: page.bgImage ? `url(${page.bgImage})` : theme.cardBgImage ? `url(${theme.cardBgImage})` : undefined,
+              backgroundSize: (page.bgImage || theme.cardBgImage) ? "cover" : undefined,
+              backgroundPosition: (page.bgImage || theme.cardBgImage) ? "center" : undefined,
+              backgroundRepeat: (page.bgImage || theme.cardBgImage) ? "no-repeat" : undefined,
               padding: `${padding}px`,
             }}
           >
-            {showQuotes && (
-              <div className={`flex ${quoteAlign} mb-4`}>
-                <QuoteIcon color={theme.iconColor} size={40} />
-              </div>
-            )}
+            {hasBg && <div className="absolute inset-0 bg-black/40" />}
 
-            <div
-              className={`${alignClass} ${fontSize} leading-loose whitespace-pre-wrap break-words flex-1 flex items-center`}
-              style={{
-                color: theme.textColor,
-                fontFamily: font.cssVar,
-              }}
-            >
-              <div className="w-full">{page.text}</div>
-            </div>
+            <div className="relative z-10 flex flex-col justify-center flex-1">
+              {showQuotes && (
+                <div className={`flex ${quoteAlign} mb-4`}>
+                  <QuoteIcon color={hasBg ? "#fff" : theme.iconColor} size={40} />
+                </div>
+              )}
 
-            <div className="mt-auto pt-6">
               <div
-                className="h-px mb-4"
-                style={{ backgroundColor: theme.separatorColor }}
-              />
-              <div className={alignClass}>
-                <span
-                  className="text-xs tracking-[0.2em] uppercase"
-                  style={{
-                    color: theme.authorColor,
-                    fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
-                  }}
-                >
-                  {author}
-                </span>
+                className={`${alignClass} ${fontSize} leading-loose whitespace-pre-wrap break-words flex-1 flex items-center`}
+                style={{
+                  color: hasBg ? "#ffffff" : theme.textColor,
+                  fontFamily: font.cssVar,
+                }}
+              >
+                <div className="w-full">{page.text}</div>
+              </div>
+
+              <div className="mt-auto pt-6">
+                <div
+                  className="h-px mb-4"
+                  style={{ backgroundColor: hasBg ? "rgba(255,255,255,0.3)" : theme.separatorColor }}
+                />
+                <div className={alignClass}>
+                  <span
+                    className="text-xs tracking-[0.2em] uppercase"
+                    style={{
+                      color: hasBg ? "rgba(255,255,255,0.7)" : theme.authorColor,
+                      fontFamily: "'Inter', 'Noto Sans SC', sans-serif",
+                    }}
+                  >
+                    {author}
+                  </span>
+                </div>
               </div>
             </div>
 
             {pages.length > 1 && (
               <div
-                className="absolute top-4 right-4 px-2 py-0.5 rounded-full text-[10px]"
+                className="absolute top-4 right-4 px-2 py-0.5 rounded-full text-[10px] z-10"
                 style={{
-                  backgroundColor: theme.separatorColor,
-                  color: theme.authorColor,
+                  backgroundColor: hasBg ? "rgba(0,0,0,0.4)" : theme.separatorColor,
+                  color: hasBg ? "#fff" : theme.authorColor,
                 }}
               >
                 {i + 1} / {pages.length}
