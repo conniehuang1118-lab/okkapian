@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   }
 
   const urlContext = url ? `\n\n原始网址：${url}` : "";
-  const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash-lite"];
   const prompt = `${SYSTEM_PROMPT}\n\n---\n\n以下是用户提供的原始内容：${urlContext}\n\n${text.slice(0, 8000)}`;
   const ai = new GoogleGenAI({ apiKey });
 
